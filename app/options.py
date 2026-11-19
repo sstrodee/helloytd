@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from yt_dlp.utils import download_range_func
 
 from .formats import VIDEO_FORMAT, trim_label, video_format_sort
+from .i18n import tr
 from .links import redact_url_credentials
 
 SUBTITLE_LANGS = ["ru", "en"]
@@ -196,18 +197,19 @@ def run_with_cookie_retry(attempt, browser, mode, on_retry=None):
 def summarize_result(info, is_playlist, *, path_ready=bool):
     """(успех, сообщение, путь к файлу или к папке плейлиста) по ответу yt-dlp."""
     if not info:
-        return False, ERROR_MESSAGES["unknown"], ""
+        return False, tr(ERROR_MESSAGES["unknown"]), ""
     if not is_playlist:
         path = _downloaded_path(info)
-        return (True, "", path) if path_ready(path) else (False, ERROR_MESSAGES["unknown"], "")
+        return (True, "", path) if path_ready(path) else (False, tr(ERROR_MESSAGES["unknown"]), "")
 
     entries = list(info.get("entries") or [])
     paths = [path for path in (_downloaded_path(entry) for entry in entries if entry) if path_ready(path)]
     if not paths:
-        return False, "Ни одно видео из плейлиста не скачалось.", ""
+        return False, tr("Ни одно видео из плейлиста не скачалось."), ""
     folder = os.path.dirname(paths[0])
     if len(paths) < len(entries):
-        return True, f"Скачано {len(paths)} из {len(entries)} — остальные недоступны.", folder
+        return True, tr("Скачано {done} из {total} — остальные недоступны.",
+                        done=len(paths), total=len(entries)), folder
     return True, "", folder
 
 
@@ -251,9 +253,10 @@ def needs_cookies(message):
 def friendly_error(message):
     kind = classify_error(message)
     if kind != "unknown":
-        return ERROR_MESSAGES[kind]
+        return tr(ERROR_MESSAGES[kind])
     detail = _error_detail(message)
-    return f"{ERROR_MESSAGES['unknown']} {detail}" if detail else ERROR_MESSAGES["unknown"]
+    message = tr(ERROR_MESSAGES["unknown"])
+    return f"{message} {detail}" if detail else message
 
 
 def _error_detail(message):

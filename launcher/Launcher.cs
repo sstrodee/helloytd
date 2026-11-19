@@ -5,6 +5,7 @@
 // со своим значком, а не как pythonw.exe. Без аргументов открывает окно;
 // с аргументами ведёт себя как python.exe — так кнопка «Обновить yt-dlp» вызывает pip.
 using System;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -12,14 +13,15 @@ using System.Windows.Forms;
 
 [assembly: AssemblyTitle("helloytd")]
 [assembly: AssemblyProduct("helloytd")]
-[assembly: AssemblyDescription("Скачать видео и музыку с YouTube")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyDescription("YouTube video and audio downloader")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
 
 static class Launcher
 {
     // Искать зависимости Python рядом с его DLL.
     const uint LoadWithAlteredSearchPath = 0x00000008;
+    static readonly bool Russian = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru";
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern IntPtr LoadLibraryExW(string path, IntPtr reserved, uint flags);
@@ -39,8 +41,9 @@ static class Launcher
         IntPtr python = LoadLibraryExW(dll, IntPtr.Zero, LoadWithAlteredSearchPath);
         if (python == IntPtr.Zero)
         {
-            Fail("Рядом с программой нет папки runtime.\n\n" +
-                 "helloytd работает только из своей папки целиком: " + root);
+            Fail(Russian
+                ? "Не удалось загрузить runtime.\n\nРаспакуйте архив helloytd целиком: " + root
+                : "Could not load the runtime.\n\nExtract the entire helloytd archive: " + root);
             return 1;
         }
         PyMain pyMain = (PyMain)Marshal.GetDelegateForFunctionPointer(
@@ -62,8 +65,9 @@ static class Launcher
         int code = pyMain(argv.Length, argv);
         if (window && code != 0)
         {
-            Fail("helloytd завершился с ошибкой (код " + code + ").\n\n" +
-                 "Подробности — в журнале data\\app.log рядом с программой.");
+            Fail(Russian
+                ? "helloytd завершился с ошибкой (код " + code + ").\n\nПодробности в data\\app.log."
+                : "helloytd exited with error code " + code + ".\n\nSee data\\app.log for details.");
         }
         return code;
     }

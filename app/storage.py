@@ -7,9 +7,11 @@ from pathlib import Path
 
 from PySide6.QtCore import QLockFile
 
+from .i18n import LANGUAGES
 from .options import AUDIO_CHOICES
 
 DEFAULT_SETTINGS = {
+    "language": "auto",
     "out_dir": "",              # пусто — папка «Видео\YouTube»
     "mode": "video",            # "video" | "audio"
     "video_height": None,       # None — лучшее доступное
@@ -38,6 +40,7 @@ def load_settings(path):
     for key, choices in {
         "mode": ("video", "audio"), "audio_format": AUDIO_CHOICES,
         "cookies_mode": ("auto", "always", "never"), "route_mode": ("auto", "direct", "manual"),
+        "language": LANGUAGES,
     }.items():
         if settings[key] not in choices:
             settings[key] = DEFAULT_SETTINGS[key]

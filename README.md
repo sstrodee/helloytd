@@ -1,52 +1,53 @@
 <div align="center">
   <img src="assets/icon.png" alt="" width="88">
   <h1>helloytd</h1>
-  <p>Видео, звук и фрагменты с YouTube. Portable-приложение для Windows.</p>
-  <p><a href="https://github.com/sstrodee/helloytd/releases/latest"><strong>Скачать для Windows ↗</strong></a></p>
+  <p>Save YouTube videos, audio, and clips. A portable app for Windows.</p>
+  <p><a href="https://github.com/sstrodee/helloytd/releases/latest"><strong>Download for Windows ↗</strong></a> · <a href="README.ru.md">Русский</a></p>
 </div>
 
-![Главное окно helloytd с панелью скачивания и цветным полем](docs/helloytd-windows.png)
+![helloytd in English with the download controls on the left and a blue and coral field on the right](docs/helloytd-windows-en.png)
 
-## Быстрый старт
+## Quick start
 
-1. В [Releases](https://github.com/sstrodee/helloytd/releases) скачать `helloytd-1.0.0-windows-x64.zip`.
-2. Распаковать архив целиком в папку с доступом на запись и открыть `helloytd.exe`.
-3. Вставить ссылку, выбрать видео или звук и нажать «скачать».
+1. Download the `windows-x64` ZIP from [Releases](https://github.com/sstrodee/helloytd/releases).
+2. Extract the entire archive to a writable folder and open `helloytd.exe`.
+3. Paste a link, choose video or audio, and select **download**.
 
-**Windows 10 (1809+) или Windows 11, x64.** Сборка проверена на Windows 11. Python уже внутри архива. Для обработки видео и звука нужен [FFmpeg](https://ffmpeg.org/download.html). Для работы с YouTube нужен [Node.js](https://nodejs.org/) или [Deno](https://deno.com/). В настройках helloytd видно, какие компоненты найдены.
+**Requirements:** Windows 10 (1809 or later) or Windows 11, x64. Python is included. Install [FFmpeg](https://ffmpeg.org/download.html) and either [Node.js](https://nodejs.org/) or [Deno](https://deno.com/) separately. Settings shows which components were detected.
 
-## Возможности
+## Features
 
-- Видео до 4K при наличии соответствующего формата.
-- MP3 192/320 кбит/с и M4A, с метаданными и обложкой.
-- Фрагменты по таймкодам, например `1:30–4:00`. Для видеофрагментов — до 1080p.
-- Выбор отдельных роликов из плейлиста и субтитры на русском и английском отдельным SRT-файлом.
-- Очередь, история, отмена и повтор скачивания.
+- Video up to 4K when the source offers it.
+- MP3 at 192 or 320 kbps and M4A, with metadata and cover art.
+- Clips by timestamp, such as `1:30–4:00`. Video clips are capped at 1080p.
+- Select individual items from a playlist and save English or Russian subtitles as separate SRT files.
+- Download queue, history, cancel, and retry.
 
-Доступные форматы и субтитры зависят от ролика. Скачивание предполагает доступ к материалу и право сохранить его.
+Format and subtitle availability depend on the source. Only download material that can be accessed and saved with permission.
 
-## Настройки и обновления
+## Settings and updates
 
-- Настройки, история и кэш хранятся в `data` рядом с EXE. Если папка защищена от записи, данные сохраняются в `%APPDATA%\helloytd`. Для переноса настроек между portable-копиями достаточно скопировать `data` после закрытия программы.
-- Маршрут к YouTube выбирается автоматически. Ручной прокси можно указать в настройках приложения.
-- Cookies берутся из выбранного браузера, если требуется вход и это разрешено в настройках. По умолчанию первая попытка проходит без них.
-- В случае изменений на стороне YouTube в настройках есть кнопка «обновить yt-dlp». Новая версия yt-dlp активируется после перезапуска приложения.
+- The app follows the Windows display language. To set English or Russian manually, use **Settings → Language** and restart.
+- Settings, history, and cache are stored in `data` next to the EXE or in `%APPDATA%\helloytd` if the portable folder is read-only.
+- The app detects a route to YouTube automatically. A manual proxy can be set in Settings.
+- Browser cookies are used according to the selected sign-in preference. The default tries without them first.
+- If YouTube changes the formats it serves, select **update yt-dlp** in Settings and restart after the update.
 
-Для сообщения об ошибке пригодятся версия helloytd, версия yt-dlp, выбранный режим и текст ошибки. Личные данные, cookies и адреса прокси с паролями в отчёт не нужны.
+When reporting a bug, include the app and yt-dlp versions, the selected mode, and the error message. Leave out browser cookies, private links, and proxy credentials.
 
-## Сборка из исходников
+## Build from source
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build_portable.ps1 -OutputName helloytd-local
 dist\helloytd-local\runtime\python.exe run_tests.py
 ```
 
-Скрипт проверяет архив и подпись встроенного Python, устанавливает зависимости, собирает Windows-запускатель и создаёт portable ZIP. Выходное имя должно быть свободно. Зависимости тестов устанавливаются в `.test-deps`.
+The script verifies the embedded Python archive and DLL signature, installs dependencies, compiles the Windows launcher, and creates the portable ZIP. Use an unused output name. Test dependencies are installed in `.test-deps`.
 
-После проверки сборки команда ниже добавляет документы о лицензиях и создаёт Windows ZIP с номером версии и SHA-256 для Releases.
+To prepare a versioned Windows release ZIP with license notices and a SHA-256 file:
 
 ```powershell
 dist\helloytd-local\runtime\python.exe -B tools\package_release.py dist\helloytd-local-portable.zip
 ```
 
-Код helloytd доступен по [лицензии MIT](LICENSE). Проект использует [yt-dlp](https://github.com/yt-dlp/yt-dlp) и [Qt for Python](https://doc.qt.io/qtforpython-6/). Сведения о включённых библиотеках, шрифтах и их лицензиях приведены в [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+helloytd is licensed under [MIT](LICENSE) and uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [Qt for Python](https://doc.qt.io/qtforpython-6/). See the [third-party notices](THIRD_PARTY_NOTICES.md) for bundled licenses and sources.

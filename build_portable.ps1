@@ -94,6 +94,7 @@ New-Item -ItemType Directory $appOut | Out-Null
 Get-ChildItem (Join-Path $root "app") -File -Filter "*.py" | Copy-Item -Destination $appOut
 Copy-Item (Join-Path $root "assets") $out -Recurse
 Copy-Item (Join-Path $root "portable-readme.txt") (Join-Path $out "Прочти меня.txt")
+Copy-Item (Join-Path $root "portable-readme.en.txt") (Join-Path $out "README.txt")
 
 Step "6/7  Значок и helloytd.exe"
 $icon = Join-Path $out "assets\icon.ico"

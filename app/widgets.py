@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from . import theme
+from .i18n import tr
 from .jobs import CANCELLED, DONE, FAILED, QUEUED, RUNNING
 from .progress import describe_detail
 
@@ -452,9 +453,9 @@ class JobRow(QFrame):
         self.figure.setMinimumWidth(64)
         layout.addWidget(self.figure)
 
-        self.cancel_button = IconButton(theme.GLYPH["cancel"], "Отменить", on_field=True)
-        self.retry_button = IconButton(theme.GLYPH["retry"], "Повторить", on_field=True)
-        self.reveal_button = IconButton(theme.GLYPH["folder"], "Показать в папке", on_field=True)
+        self.cancel_button = IconButton(theme.GLYPH["cancel"], tr("Отменить"), on_field=True)
+        self.retry_button = IconButton(theme.GLYPH["retry"], tr("Повторить"), on_field=True)
+        self.reveal_button = IconButton(theme.GLYPH["folder"], tr("Показать в папке"), on_field=True)
         self.cancel_button.clicked.connect(lambda: self.cancel_requested.emit(self.job))
         self.retry_button.clicked.connect(lambda: self.retry_requested.emit(self.job))
         self.reveal_button.clicked.connect(lambda: self.reveal_requested.emit(self.job))
@@ -487,12 +488,12 @@ class JobRow(QFrame):
         elif state == DONE and job.message:
             detail = job.message
         elif state == FAILED:
-            detail = job.message or "Не получилось скачать"
+            detail = job.message or tr("Не получилось скачать")
 
         quiet = self._on_stage and state == RUNNING
         if quiet:
             figure, detail = "", ""
-        self.state.setText(self.STATES[state])
+        self.state.setText(tr(self.STATES[state]))
         self.status.setText(detail)
         set_role(self.status, "fieldError" if state == FAILED else "fieldSmall")
         self.dot.set_state({RUNNING: "running", DONE: "done", FAILED: "failed"}.get(state, "idle"))

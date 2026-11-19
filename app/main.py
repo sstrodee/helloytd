@@ -8,13 +8,14 @@ import traceback
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QLibraryInfo, QLocale, Qt, QTranslator
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from . import theme
 from .icon import app_icon
-from .storage import app_data_dir, keep_caches_inside, lock_data_dir
+from .i18n import resolve_language, set_language, tr
+from .storage import app_data_dir, keep_caches_inside, load_settings, lock_data_dir
 from .window import APP_TITLE, MainWindow
 
 APP_ID = "helloytd"
@@ -38,7 +39,8 @@ def install_crash_dialog(folder):
         if QApplication.instance() is not None:
             QMessageBox.critical(
                 None, APP_TITLE,
-                f"Что-то пошло не так:\n\n{value}\n\nПодробности в журнале:\n{folder / 'app.log'}",
+                tr("Что-то пошло не так:\n\n{error}\n\nПодробности в журнале:\n{path}",
+                   error=value, path=folder / "app.log"),
             )
 
     sys.excepthook = handle
@@ -61,9 +63,14 @@ def main(folder=None):
     QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(sys.argv)
     app.setApplicationName(APP_TITLE)
+    locale = resolve_language(load_settings(folder / "settings.json")["language"], QLocale.system().uiLanguages())
+    set_language(locale)
+    translator = QTranslator(app)
+    if locale == "ru" and translator.load("qtbase_ru", QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
+        app.installTranslator(translator)
     lock = lock_data_dir(folder)
     if lock is None:
-        QMessageBox.information(None, APP_TITLE, "Приложение уже запущено для этой папки данных.")
+        QMessageBox.information(None, APP_TITLE, tr("Приложение уже запущено для этой папки данных."))
         return 0
     setup_logging(folder)
     install_crash_dialog(folder)

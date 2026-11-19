@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from .formats import quality_tiers
+from .i18n import tr
 from .links import has_playlist_param
 
 # Превью в окне около 200 пикселей шириной — крупнее качать незачем.
@@ -24,14 +25,14 @@ class Preview:
 
 
 def summarize(info, url):
-    title = info.get("title") or "Без названия"
+    title = info.get("title") or tr("Без названия")
     uploader = info.get("uploader") or info.get("channel") or ""
 
     if info.get("_type") == "playlist":
         raw_entries = list(info.get("entries") or [])
         # Номера сохраняем исходные — по ним потом выбираются видео для скачивания.
         entries = tuple(
-            (number, entry.get("title") or "Без названия", entry.get("duration"))
+            (number, entry.get("title") or tr("Без названия"), entry.get("duration"))
             for number, entry in enumerate(raw_entries, start=1)
             if entry
         )

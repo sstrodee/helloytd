@@ -6,7 +6,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QStandardPaths, Qt, QTimer
+from PySide6.QtCore import QLocale, QStandardPaths, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPainter
 from PySide6.QtWidgets import (
     QApplication,
@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 
 from . import theme
 from .formats import QUALITY_TIERS, format_duration, parse_range, tier_name
+from .i18n import language, tr, video_count, video_noun
 from .jobs import CANCELLED, DONE, FAILED, QUEUED, RUNNING, Job, JobQueue
 from .links import is_youtube_url, normalize_url, redact_url_credentials
 from .options import AUDIO_CHOICES, FRAGMENT_MAX_HEIGHT, PLAYLIST_PREVIEW_LIMIT, DownloadRequest
@@ -93,8 +94,8 @@ def ask(parent, title, text):
     box.setIcon(QMessageBox.Question)
     box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
     box.setDefaultButton(QMessageBox.No)
-    box.button(QMessageBox.Yes).setText("Да")
-    box.button(QMessageBox.No).setText("Нет")
+    box.button(QMessageBox.Yes).setText(tr("Да"))
+    box.button(QMessageBox.No).setText(tr("Нет"))
     theme.apply_title_bar(box)
     return box.exec() == QMessageBox.Yes
 
@@ -209,34 +210,34 @@ class MainWindow(QWidget):
         brand.setFont(theme.serif_font(26, italic=True))
         top.addWidget(brand, 0, Qt.AlignVCenter)
         top.addStretch(1)
-        settings_button = IconButton(theme.GLYPH["settings"], "Настройки", theme.C["ink"])
+        settings_button = IconButton(theme.GLYPH["settings"], tr("Настройки"), theme.C["ink"])
         settings_button.clicked.connect(self._open_settings)
         top.addWidget(settings_button, 0, Qt.AlignVCenter)
         footer.insertLayout(0, top)
         footer.insertSpacing(1, 30)
 
-        layout.addWidget(caption("ссылка"))
+        layout.addWidget(caption(tr("ссылка")))
         layout.addSpacing(8)
         layout.addWidget(self._build_link())
 
         layout.addSpacing(28)
-        self.mode_switch = SegmentedControl([("video", "видео"), ("audio", "аудио")])
+        self.mode_switch = SegmentedControl([("video", tr("видео")), ("audio", tr("аудио"))])
         self.mode_switch.changed.connect(self._on_mode_changed)
         layout.addWidget(self.mode_switch)
 
         layout.addSpacing(26)
-        layout.addWidget(caption("качество"))
+        layout.addWidget(caption(tr("качество")))
         layout.addSpacing(8)
         self.quality = ChoiceGrid()
         self.quality.changed.connect(self._on_quality_changed)
         layout.addWidget(self.quality)
 
         layout.addSpacing(26)
-        self.subs_check = QCheckBox("субтитры (рус, англ)")
+        self.subs_check = QCheckBox(tr("субтитры (рус, англ)"))
         self.subs_check.toggled.connect(self._on_subtitles_toggled)
         layout.addWidget(self.subs_check)
         layout.addSpacing(12)
-        self.trim_check = QCheckBox("только фрагмент")
+        self.trim_check = QCheckBox(tr("только фрагмент"))
         self.trim_check.toggled.connect(self._on_trim_toggled)
         layout.addWidget(self.trim_check)
         layout.addWidget(self._build_trim())
@@ -261,24 +262,24 @@ class MainWindow(QWidget):
         self.banner.hide()
         layout.addWidget(self.banner)
 
-        layout.addWidget(caption("папка"))
+        layout.addWidget(caption(tr("папка")))
         layout.addSpacing(2)
         folder = QHBoxLayout()
         folder.setSpacing(4)
         self.folder_label = ElidedLabel("", "dim", Qt.ElideMiddle)
         folder.addWidget(self.folder_label, 1)
-        change = QPushButton("изменить")
+        change = QPushButton(tr("изменить"))
         change.setProperty("kind", "link")
         change.setCursor(Qt.PointingHandCursor)
         change.clicked.connect(self._choose_folder)
         folder.addWidget(change)
-        open_folder = IconButton(theme.GLYPH["folder"], "Открыть папку")
+        open_folder = IconButton(theme.GLYPH["folder"], tr("Открыть папку"))
         open_folder.clicked.connect(self._open_folder)
         folder.addWidget(open_folder)
         layout.addLayout(folder)
 
         layout.addSpacing(18)
-        self.download_button = PillButton("скачать")
+        self.download_button = PillButton(tr("скачать"))
         self.download_button.clicked.connect(self._start_download)
         layout.addWidget(self.download_button)
         return strip
@@ -292,11 +293,11 @@ class MainWindow(QWidget):
         row.setSpacing(8)
         self.url_edit = QLineEdit()
         self.url_edit.setObjectName("url")
-        self.url_edit.setPlaceholderText("видео или плейлист")
+        self.url_edit.setPlaceholderText(tr("видео или плейлист"))
         self.url_edit.textEdited.connect(self._on_url_edited)
-        self.url_edit.setAccessibleName("ссылка на видео или плейлист")
+        self.url_edit.setAccessibleName(tr("ссылка на видео или плейлист"))
         self.url_edit.returnPressed.connect(self._on_url_enter)
-        paste_button = QPushButton("вставить")
+        paste_button = QPushButton(tr("вставить"))
         paste_button.setProperty("kind", "inset")
         paste_button.setFixedHeight(36)
         paste_button.setCursor(Qt.PointingHandCursor)
@@ -311,14 +312,14 @@ class MainWindow(QWidget):
         layout.setContentsMargins(28, 12, 0, 0)
         layout.setSpacing(10)
         self.trim_start = QLineEdit()
-        self.trim_start.setAccessibleName("начало фрагмента")
+        self.trim_start.setAccessibleName(tr("начало фрагмента"))
         self.trim_start.setPlaceholderText("0:00")
         self.trim_end = QLineEdit()
-        self.trim_end.setAccessibleName("конец фрагмента")
-        self.trim_end.setPlaceholderText("конец")
-        layout.addWidget(label("с", "dim"))
+        self.trim_end.setAccessibleName(tr("конец фрагмента"))
+        self.trim_end.setPlaceholderText(tr("конец"))
+        layout.addWidget(label(tr("с"), "dim"))
         layout.addWidget(self.trim_start)
-        layout.addWidget(label("по", "dim"))
+        layout.addWidget(label(tr("по"), "dim"))
         layout.addWidget(self.trim_end)
         layout.addStretch(1)
         for edit in (self.trim_start, self.trim_end):
@@ -410,7 +411,7 @@ class MainWindow(QWidget):
         self.card_busy.setTextVisible(False)
         self.card_busy.setMaximumWidth(256)
         layout.addWidget(self.card_busy)
-        self.whole_playlist = QCheckBox("скачать весь плейлист")
+        self.whole_playlist = QCheckBox(tr("скачать весь плейлист"))
         self.whole_playlist.setObjectName("onField")
         self.whole_playlist.toggled.connect(self._on_whole_playlist_toggled)
         layout.addWidget(self.whole_playlist)
@@ -423,7 +424,7 @@ class MainWindow(QWidget):
         self.playlist_count = label("", "fieldDim")
         bar.addWidget(self.playlist_count)
         bar.addStretch(1)
-        for text, checked in (("выбрать все", True), ("снять все", False)):
+        for text, checked in ((tr("выбрать все"), True), (tr("снять все"), False)):
             button = QPushButton(text)
             button.setProperty("kind", "fieldLink")
             button.setCursor(Qt.PointingHandCursor)
@@ -477,9 +478,9 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 22, 0, 0)
         layout.setSpacing(4)
         header = QHBoxLayout()
-        header.addWidget(caption("загрузки", on_field=True))
+        header.addWidget(caption(tr("загрузки"), on_field=True))
         header.addStretch(1)
-        self.clear_button = QPushButton("очистить")
+        self.clear_button = QPushButton(tr("очистить"))
         self.clear_button.setProperty("kind", "fieldLink")
         self.clear_button.setCursor(Qt.PointingHandCursor)
         self.clear_button.clicked.connect(self._clear_finished)
@@ -550,29 +551,32 @@ class MainWindow(QWidget):
         self._probe = None
         self.env = env
         self._show_network_state()
-        missing = [name for name, available in (("FFmpeg", env.ffmpeg_dir), ("JS-движок", env.js_runtime)) if not available]
-        self.banner_text.setText(f"Отсутствует: {' и '.join(missing)}.\nУстановка — в настройках." if missing else "")
+        missing = [name for name, available in (("FFmpeg", env.ffmpeg_dir), (tr("JS-движок"), env.js_runtime)) if not available]
+        self.banner_text.setText(tr("Отсутствует: {components}.\nУстановка — в настройках.",
+                                    components=tr(" и ").join(missing)) if missing else "")
         self.banner_text.setToolTip("\n".join(
-            hint for available, hint in ((env.ffmpeg_dir, FFMPEG_HINT), (env.js_runtime, JS_HINT)) if not available
+            tr(hint) for available, hint in ((env.ffmpeg_dir, FFMPEG_HINT), (env.js_runtime, JS_HINT)) if not available
         ))
         self.banner.setVisible(bool(missing))
         self._start_pending_preview()
 
     def _show_network_state(self):
         env = self.env
-        again = "По клику сеть проверяется заново."
+        again = tr("По клику сеть проверяется заново.")
         if env.reachable is None:
-            self.net_pill.show_state("warn", "проверка сети…", "Поиск маршрута до YouTube")
+            self.net_pill.show_state("warn", tr("проверка сети…"), tr("Поиск маршрута до YouTube"))
         elif env.reachable and env.proxy:
             proxy = redact_url_credentials(env.proxy)
             address = proxy.split("://")[-1]
-            self.net_pill.show_state("done", f"прокси {address}", f"YouTube открывается через {proxy}.\n{again}")
+            self.net_pill.show_state("done", tr("прокси {address}", address=address),
+                                     tr("YouTube открывается через {proxy}.\n{again}", proxy=proxy, again=again))
         elif env.reachable:
-            self.net_pill.show_state("done", "youtube напрямую", f"Без прокси.\n{again}")
+            self.net_pill.show_state("done", tr("youtube напрямую"), tr("Без прокси.\n{again}", again=again))
         else:
             self.net_pill.show_state(
-                "failed", "youtube недоступен",
-                f"YouTube не ответил ни напрямую, ни через найденные прокси. Нужен включённый VPN.\n{again}")
+                "failed", tr("youtube недоступен"),
+                tr("YouTube не ответил ни напрямую, ни через найденные прокси. Нужен включённый VPN.\n{again}",
+                   again=again))
 
     # ----- ссылка и карточка -------------------------------------------------
 
@@ -661,7 +665,7 @@ class MainWindow(QWidget):
         self.card_figure.setText("")
         self.card_figure_unit.setText("")
         self.card_title.setText(self._fetch_url or "")
-        self.card_meta.setText("открывается ссылка…")
+        self.card_meta.setText(tr("открывается ссылка…"))
         self.card_status.hide()
         self.card_busy.show()
         self.whole_playlist.hide()
@@ -682,11 +686,11 @@ class MainWindow(QWidget):
         self.card_title.setText(preview.title)
         if is_playlist:
             count = len(preview.entries)
-            self.card_meta.setText(", ".join(part for part in ("плейлист", preview.uploader) if part))
+            self.card_meta.setText(", ".join(part for part in (tr("плейлист"), preview.uploader) if part))
             more = "+" if count >= PLAYLIST_PREVIEW_LIMIT else ""
             # «+» в полный рост: маленький на базовой линии читается как опечатка, а не «больше».
             self.card_figure.setText(f"{count}{more}")
-            self.card_figure_unit.setText("видео")
+            self.card_figure_unit.setText(video_noun(count))
             self._fill_playlist(preview.entries)
         else:
             self.card_meta.setText(preview.uploader or "")
@@ -707,7 +711,7 @@ class MainWindow(QWidget):
             return
         self.card_busy.hide()
         self.card_thumb.set_image(None)
-        self.card_meta.setText("ссылка не открылась")
+        self.card_meta.setText(tr("ссылка не открылась"))
         self.card_title.setText(self._fetch_url or "")
         self.card_figure.setText("")
         self.card_figure_unit.setText("")
@@ -719,7 +723,7 @@ class MainWindow(QWidget):
     def _on_preview_retrying(self, serial, message):
         if serial != self._fetch_serial:
             return
-        self.card_status.setText(message)
+        self.card_status.setText(tr(message))
         set_role(self.card_status, "fieldDim")
         self.card_status.show()
 
@@ -754,7 +758,8 @@ class MainWindow(QWidget):
 
     def _on_selection_changed(self):
         total = f"{self.playlist_list.count()}+" if self._playlist_truncated() else self.playlist_list.count()
-        self.playlist_count.setText(f"выбрано {len(self._checked_entries())} из {total}")
+        self.playlist_count.setText(tr("выбрано {selected} из {total}",
+                                       selected=len(self._checked_entries()), total=total))
         self._update_controls()
 
     def _playlist_truncated(self):
@@ -764,20 +769,20 @@ class MainWindow(QWidget):
 
     def _fill_quality(self):
         if self.mode_switch.value() == "audio":
-            choices = [(key, AUDIO_CHIPS[key], text) for key, (text, _codec, _bitrate) in AUDIO_CHOICES.items()]
+            choices = [(key, AUDIO_CHIPS[key], tr(text)) for key, (text, _codec, _bitrate) in AUDIO_CHOICES.items()]
             self.quality.set_choices(choices, self.settings["audio_format"], columns=3)
         else:
             if self.preview is not None and self.preview.kind == "video":
                 tiers = list(self.preview.tiers)
                 if self.trim_check.isChecked():
                     tiers = [tier for tier in tiers if tier <= FRAGMENT_MAX_HEIGHT]
-                    best = f"Лучшее для фрагмента, до {FRAGMENT_MAX_HEIGHT}p"
+                    best = tr("Лучшее для фрагмента, до {height}p", height=FRAGMENT_MAX_HEIGHT)
                 else:
-                    best = f"Лучшее доступное, {tiers[0]}p" if tiers else "Лучшее доступное"
+                    best = tr("Лучшее доступное, {height}p", height=tiers[0]) if tiers else tr("Лучшее доступное")
             else:
                 tiers = list(QUALITY_TIERS)
-                best = "Лучшее доступное"
-            choices = [(None, "лучшее", best)] + [(tier, f"{tier}p", tier_name(tier)) for tier in tiers]
+                best = tr("Лучшее доступное")
+            choices = [(None, tr("лучшее"), best)] + [(tier, f"{tier}p", tier_name(tier)) for tier in tiers]
             preferred = self.settings["video_height"]
             value = None
             if preferred is not None and tiers:
@@ -821,7 +826,12 @@ class MainWindow(QWidget):
             theme.repolish(edit)
 
     def _choose_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Папка для сохранения", self.settings["out_dir"])
+        options = QFileDialog.Option.ShowDirsOnly
+        system_language = next(iter(QLocale.system().uiLanguages()), "").split("-")[0].lower()
+        if language() != system_language:
+            options |= QFileDialog.Option.DontUseNativeDialog
+        folder = QFileDialog.getExistingDirectory(self, tr("Папка для сохранения"), self.settings["out_dir"],
+                                                  options=options)
         if folder:
             self.settings["out_dir"] = os.path.normpath(folder)
             self.folder_label.setText(self.settings["out_dir"])
@@ -833,7 +843,7 @@ class MainWindow(QWidget):
             os.makedirs(folder, exist_ok=True)
             os.startfile(folder)
         except OSError as error:
-            QMessageBox.warning(self, APP_TITLE, f"Не получилось открыть папку:\n{error}")
+            QMessageBox.warning(self, APP_TITLE, tr("Не получилось открыть папку:\n{error}", error=error))
 
     def _update_controls(self):
         preview = self.preview
@@ -842,9 +852,9 @@ class MainWindow(QWidget):
 
         has_subs = preview is None or is_playlist or preview.has_subtitles
         self.subs_check.setEnabled(is_video_mode and has_subs)
-        self.subs_check.setToolTip("" if has_subs else "У этого видео нет субтитров")
+        self.subs_check.setToolTip("" if has_subs else tr("У этого видео нет субтитров"))
         self.trim_check.setEnabled(not is_playlist)
-        self.trim_check.setToolTip("Для плейлиста фрагмент не выбирается" if is_playlist else "")
+        self.trim_check.setToolTip(tr("Для плейлиста фрагмент не выбирается") if is_playlist else "")
         self.trim_fields.setVisible(self.trim_check.isChecked() and not is_playlist)
 
         text, enabled = self._download_label()
@@ -854,23 +864,24 @@ class MainWindow(QWidget):
     def _download_label(self):
         preview = self.preview
         if preview is None:
-            return "скачать", False
+            return tr("скачать"), False
         audio_key = self.quality.value() if self.mode_switch.value() == "audio" else None
         codec = AUDIO_CHOICES[audio_key][1] if audio_key in AUDIO_CHOICES else None
         if preview.kind == "playlist":
             count = len(self._checked_entries())
             if count == 0:
-                return "ничего не выбрано", False
+                return tr("ничего не выбрано"), False
             # Отмечено всё в урезанном списке — скачается весь плейлист, а не только показанное.
             whole = count == self.playlist_list.count() and self._playlist_truncated()
-            what = "весь плейлист" if whole else f"{count} видео"
-            return (f"скачать {what} в {codec}" if codec else f"скачать {what}"), True
+            what = tr("весь плейлист") if whole else video_count(count)
+            return (tr("скачать {what} в {codec}", what=what, codec=codec) if codec
+                    else tr("скачать {what}", what=what)), True
         if self.trim_check.isChecked():
-            return "скачать фрагмент", True
+            return tr("скачать фрагмент"), True
         if codec:
-            return f"скачать {codec}", True
+            return tr("скачать {what}", what=codec), True
         height = self.quality.value()
-        return (f"скачать {height}p" if height else "скачать"), True
+        return (tr("скачать {what}", what=f"{height}p") if height else tr("скачать")), True
 
     # ----- скачивание --------------------------------------------------------
 
@@ -882,7 +893,8 @@ class MainWindow(QWidget):
         try:
             os.makedirs(out_dir, exist_ok=True)
         except OSError as error:
-            QMessageBox.warning(self, APP_TITLE, f"Не получилось создать папку {out_dir}:\n{error}")
+            QMessageBox.warning(self, APP_TITLE, tr("Не получилось создать папку {folder}:\n{error}",
+                                                    folder=out_dir, error=error))
             return
 
         mode = self.mode_switch.value()
@@ -932,20 +944,21 @@ class MainWindow(QWidget):
         parts = []
         if request.is_playlist:
             if request.playlist_items:
-                parts.append(f"плейлист, {len(request.playlist_items)} видео")
+                parts.append(tr("плейлист, {videos}", videos=video_count(len(request.playlist_items))))
             elif self._playlist_truncated():
-                parts.append("плейлист целиком")
+                parts.append(tr("плейлист целиком"))
             else:
-                parts.append(f"плейлист, {len(self.preview.entries)} видео")
+                parts.append(tr("плейлист, {videos}", videos=video_count(len(self.preview.entries))))
         if request.mode == "audio":
-            parts.append(AUDIO_CHOICES[self.quality.value()][0])
+            parts.append(tr(AUDIO_CHOICES[self.quality.value()][0]))
         else:
-            parts.append(f"{request.max_height}p" if request.max_height else "лучшее качество")
+            parts.append(f"{request.max_height}p" if request.max_height else tr("лучшее качество"))
             if request.subtitles:
-                parts.append("субтитры")
+                parts.append(tr("субтитры"))
         if request.trim:
             start, end = request.trim
-            parts.append(f"фрагмент {format_duration(start)}–{format_duration(end) if end else 'конец'}")
+            parts.append(tr("фрагмент {start}–{end}", start=format_duration(start),
+                            end=format_duration(end) if end is not None else tr("конец")))
         return ", ".join(parts)
 
     def _reset_input(self):
@@ -995,7 +1008,7 @@ class MainWindow(QWidget):
         self.queue.cancel(job.id)
         if job.state == RUNNING:
             fraction = job.progress.fraction if job.progress else None
-            job.progress = Progress(fraction=fraction, stage="Остановка…")
+            job.progress = Progress(fraction=fraction, stage=tr("Остановка…"))
         self._refresh_rows()
         self._update_title()
 
@@ -1056,7 +1069,7 @@ class MainWindow(QWidget):
                 except (OSError, ValueError):
                     pass
             job = Job(
-                title=entry.get("title") or "Без названия", request=None, state=DONE,
+                title=entry.get("title") or tr("Без названия"), request=None, state=DONE,
                 path=entry.get("path"), message=entry.get("message") or None,
                 thumbnail=thumbnail, kind=entry.get("kind", "video"), detail=entry.get("detail", ""),
             )
@@ -1093,7 +1106,7 @@ class MainWindow(QWidget):
         if progress is not None and progress.fraction is not None:
             self.setWindowTitle(f"{APP_TITLE} {progress.fraction * 100:.0f}%")
         elif job is not None:
-            self.setWindowTitle(f"{APP_TITLE}, скачивание")
+            self.setWindowTitle(tr("{title}, скачивание", title=APP_TITLE))
         else:
             self.setWindowTitle(APP_TITLE)
         self._update_stage()
@@ -1111,7 +1124,8 @@ class MainWindow(QWidget):
             self.progress_title.setText(job.title)
             waiting = sum(1 for queued in self.queue.jobs if queued.state == QUEUED)
             detail = describe_detail(progress)
-            self.progress_detail.setText(f"{detail}, ещё {waiting} в очереди" if waiting else detail)
+            self.progress_detail.setText(tr("{detail}, ещё {count} в очереди", detail=detail, count=waiting)
+                                         if waiting else detail)
         if self._card_shown:
             page = self.card_page
         elif job is not None:
@@ -1155,7 +1169,7 @@ class MainWindow(QWidget):
                 event.accept()
             return
         active = [job for job in self.queue.jobs if job.state in (RUNNING, QUEUED)]
-        if active and not ask(self, "Идёт скачивание", "Закрыть приложение и остановить скачивание?"):
+        if active and not ask(self, tr("Идёт скачивание"), tr("Закрыть приложение и остановить скачивание?")):
             event.ignore()
             return
         self._closing = True
@@ -1167,7 +1181,7 @@ class MainWindow(QWidget):
         self._save_settings()
         if self._threads:
             self.setEnabled(False)
-            self.setWindowTitle(f"{APP_TITLE}, завершение…")
+            self.setWindowTitle(tr("{title}, завершение…", title=APP_TITLE))
             event.ignore()
         else:
             event.accept()

@@ -23,6 +23,7 @@ def main():
     version = match[1]
     additions = {
         "helloytd/Прочти меня.txt": ROOT / "portable-readme.txt",
+        "helloytd/README.txt": ROOT / "portable-readme.en.txt",
         "helloytd/THIRD_PARTY_NOTICES.md": ROOT / "THIRD_PARTY_NOTICES.md",
         "helloytd/licenses/GPL-3.0-only.txt": ROOT / "licenses" / "GPL-3.0-only.txt",
         "helloytd/licenses/LGPL-3.0-only.txt": ROOT / "licenses" / "LGPL-3.0-only.txt",

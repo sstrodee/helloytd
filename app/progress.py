@@ -7,6 +7,7 @@
 from dataclasses import dataclass, replace
 
 from .formats import format_eta, format_speed
+from .i18n import tr
 
 # Ключи — как шаги называет сам yt-dlp (PostProcessor.pp_key: без «FFmpeg» и «PP»).
 STAGE_LABELS = {
@@ -115,17 +116,17 @@ class ProgressTracker:
 def describe_detail(progress):
     """Подробности без процента: «2,1 МБ/с, осталось 12 с». Процент окно показывает крупно отдельно."""
     if progress is None:
-        return Progress().stage
+        return tr(Progress().stage)
     head = (
-        f"Видео {progress.item} из {progress.item_count}"
+        tr("Видео {index} из {total}", index=progress.item, total=progress.item_count)
         if progress.item and progress.item_count else None
     )
     if progress.stage != DOWNLOADING:
-        return ", ".join(part for part in (head, progress.stage) if part)
+        return ", ".join(part for part in (head, tr(progress.stage)) if part)
 
     parts = [head] if head else []
     if progress.speed:
         parts.append(format_speed(progress.speed))
     if progress.eta is not None:
-        parts.append(f"осталось {format_eta(progress.eta)}")
-    return ", ".join(parts) if parts else f"{DOWNLOADING}…"
+        parts.append(tr("осталось {time}", time=format_eta(progress.eta)))
+    return ", ".join(parts) if parts else tr("Скачивание…")

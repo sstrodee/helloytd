@@ -2,6 +2,8 @@
 
 import math
 
+from .i18n import language, tr
+
 _SIZE_UNITS = ("Б", "КБ", "МБ", "ГБ", "ТБ")
 _UNKNOWN = "—"
 
@@ -31,7 +33,7 @@ def video_format_sort(max_height):
     if max_height is None:
         resolution = "res"
     elif max_height <= 0:
-        raise ValueError(f"высота должна быть больше нуля, получено {max_height!r}")
+        raise ValueError(tr("высота должна быть больше нуля, получено {height!r}", height=max_height))
     else:
         resolution = f"res:{max_height}"
     # Стерео: 5.1-дорожка YouTube тяжелее картинки в 360p, а на обычных колонках звучит так же.
@@ -73,11 +75,11 @@ def parse_timecode(text):
     """Переводит «90», «1:30» или «1:02:03.5» в секунды."""
     raw = "" if text is None else str(text).strip()
     if not raw:
-        raise ValueError("таймкод пустой")
+        raise ValueError(tr("таймкод пустой"))
 
     parts = raw.split(":")
     if len(parts) > 3 or len(raw) > 64:
-        raise ValueError(f"не похоже на время: {raw!r}")
+        raise ValueError(tr("не похоже на время: {value!r}", value=raw))
 
     try:
         # Дробная часть допустима только в секундах.
@@ -86,14 +88,14 @@ def parse_timecode(text):
             for index, part in enumerate(parts)
         ]
     except ValueError:
-        raise ValueError(f"не похоже на время: {raw!r}") from None
+        raise ValueError(tr("не похоже на время: {value!r}", value=raw)) from None
 
     if not math.isfinite(numbers[-1]):
-        raise ValueError("таймкод должен быть конечным числом")
+        raise ValueError(tr("таймкод должен быть конечным числом"))
     if any(number < 0 for number in numbers):
-        raise ValueError(f"время не может быть отрицательным: {raw!r}")
+        raise ValueError(tr("время не может быть отрицательным: {value!r}", value=raw))
     if any(number >= 60 for number in numbers[1:]):
-        raise ValueError(f"минуты и секунды должны быть меньше 60: {raw!r}")
+        raise ValueError(tr("минуты и секунды должны быть меньше 60: {value!r}", value=raw))
 
     total = 0.0
     for number in numbers:
@@ -110,18 +112,18 @@ def parse_range(start, end, *, duration=None, required=False):
     end_raw = ("" if end is None else str(end)).strip()
     if not start_raw and not end_raw:
         if required:
-            raise ValueError("нужно указать начало или конец фрагмента")
+            raise ValueError(tr("нужно указать начало или конец фрагмента"))
         return None
 
     start_seconds = parse_timecode(start_raw) if start_raw else 0.0
     end_seconds = parse_timecode(end_raw) if end_raw else None
     if end_seconds is not None and end_seconds <= start_seconds:
-        raise ValueError("конец обрезки должен быть позже начала")
+        raise ValueError(tr("конец обрезки должен быть позже начала"))
     if duration is not None and duration > 0:
         if start_seconds >= duration:
-            raise ValueError("начало фрагмента за пределами видео")
+            raise ValueError(tr("начало фрагмента за пределами видео"))
         if end_seconds is not None and end_seconds > duration:
-            raise ValueError("конец фрагмента за пределами видео")
+            raise ValueError(tr("конец фрагмента за пределами видео"))
     return (start_seconds, end_seconds)
 
 
@@ -154,11 +156,14 @@ def format_bytes(value):
         return _UNKNOWN
     size = float(value)
     if size < 1024:
-        return f"{int(size)} {_SIZE_UNITS[0]}"
+        return f"{int(size)} {tr(_SIZE_UNITS[0])}"
     for unit in _SIZE_UNITS[1:]:
         size /= 1024.0
         if size < 1024 or unit == _SIZE_UNITS[-1]:
-            return f"{size:.1f} {unit}".replace(".", ",")
+            number = f"{size:.1f}"
+            if language() == "ru":
+                number = number.replace(".", ",")
+            return f"{number} {tr(unit)}"
     raise AssertionError("недостижимо")
 
 
@@ -166,7 +171,7 @@ def format_speed(value):
     """«1,0 МБ/с». Неизвестная скорость — тире."""
     if value is None or value < 0:
         return _UNKNOWN
-    return f"{format_bytes(value)}/с"
+    return tr("{speed}/с", speed=format_bytes(value))
 
 
 def format_eta(seconds):
@@ -175,10 +180,10 @@ def format_eta(seconds):
         return _UNKNOWN
     total = int(seconds)
     if total < 60:
-        return f"{total} с"
+        return tr("{time} с", time=total)
     if total < 3600:
-        return f"{total // 60} мин {total % 60} с"
-    return f"{total // 3600} ч {(total % 3600) // 60} мин"
+        return tr("{minutes} мин {seconds} с", minutes=total // 60, seconds=total % 60)
+    return tr("{hours} ч {minutes} мин", hours=total // 3600, minutes=(total % 3600) // 60)
 
 
 def format_duration(seconds):
