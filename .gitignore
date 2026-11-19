@@ -1,0 +1,27 @@
+# Test and build output
+/dist/
+/.test-deps/
+**/__pycache__/
+*.py[cod]
+/.pytest_cache/
+/.coverage
+/htmlcov/
+/.venv/
+/venv/
+
+# User data and local development
+**/data/
+.env
+.env.*
+*.log
+*.part
+*.ytdl
+/.agents/
+/.codex/
+/.impeccable/
+/design-refs/
+/PRODUCT.md
+/DESIGN.md
+/RELEASE_READINESS_1.0.md
+Thumbs.db
+Desktop.ini
